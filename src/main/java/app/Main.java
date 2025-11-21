@@ -1,32 +1,30 @@
 package app;
 
-
-
-import model.banco.Banco;
-import service.Persistencia;
+import banco.Banco;
+import pessoas.Cliente;
+import contas.ContaCorrente;
+import contas.ContaPoupanca;
 
 public class Main {
     public static void main(String[] args) {
 
-        // tenta carregar o banco salvo
-        Banco banco = Persistencia.carregarBanco();
+        Banco banco = new Banco();
 
-        if (banco == null) {
-            banco = new Banco("MeuMiniNubank");
-            System.out.println("Nenhum banco encontrado. Criado um novo.");
-        } else {
-            System.out.println("Banco carregado com sucesso!");
-        }
+        Cliente c1 = new Cliente("Aïcha", "123.456.789-00");
+        ContaCorrente cc = new ContaCorrente(c1);
 
-        // exibir menu simples
-        banco.menuPrincipal();
+        banco.adicionarConta(cc);
 
-        // salvar ao sair
-        Persistencia.salvarBanco(banco);
-        System.out.println("Dados salvos!");
+        cc.depositar(100);
+        System.out.println("Saldo CC: " + cc.getSaldo());
+
+        cc.sacar(50);
+        System.out.println("Saldo após saque: " + cc.getSaldo());
+
+        // Criando poupança só para testar
+        ContaPoupanca cp = new ContaPoupanca(c1);
+        cp.depositar(200);
+        cp.renderJuros();
+        System.out.println("Saldo Poupança com juros: " + cp.getSaldo());
     }
 }
-
-    }
-}
-
