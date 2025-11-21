@@ -1,6 +1,9 @@
 package pessoas;
 
-public class Cliente {
+import java.io.Serializable;
+
+public class Cliente implements Serializable {
+
     private String nome;
     private String cpf;
 
@@ -9,7 +12,14 @@ public class Cliente {
         this.cpf = cpf;
     }
 
-    public String getNome() { return nome; }
-    public String getCpf() { return cpf; }
+    public String getNome() {
+        return nome;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
 }
+
+
 
