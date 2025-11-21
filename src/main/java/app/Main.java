@@ -3,28 +3,29 @@ package app;
 import banco.Banco;
 import pessoas.Cliente;
 import contas.ContaCorrente;
-import contas.ContaPoupanca;
+import service.AuthService;
+import repository.ClienteRepository;
 
 public class Main {
     public static void main(String[] args) {
 
-        Banco banco = new Banco();
+        ClienteRepository clienteRepository = new ClienteRepository();
+        AuthService auth = new AuthService(clienteRepository);
 
         Cliente c1 = new Cliente("Aïcha", "123.456.789-00");
-        ContaCorrente cc = new ContaCorrente(c1);
+        clienteRepository.salvar(c1);
 
-        banco.adicionarConta(cc);
+        Cliente logado = auth.login("123.456.789-00"); // login correto
 
-        cc.depositar(100);
-        System.out.println("Saldo CC: " + cc.getSaldo());
+        if (logado != null) {
+            ContaCorrente cc = new ContaCorrente(logado);
+            cc.depositar(100);
+            System.out.println("Saldo após depósito: " + cc.getSaldo());
+        }
 
-        cc.sacar(50);
-        System.out.println("Saldo após saque: " + cc.getSaldo());
-
-        // Criando poupança só para testar
-        ContaPoupanca cp = new ContaPoupanca(c1);
-        cp.depositar(200);
-        cp.renderJuros();
-        System.out.println("Saldo Poupança com juros: " + cp.getSaldo());
+        // login errado
+        auth.login("000.000.000-00");
     }
 }
+
+
