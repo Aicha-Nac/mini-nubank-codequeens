@@ -1,67 +1,68 @@
 package repository;
 
 import model.Cliente;
+import service.Persistencia;
 
 import java.util.*;
 
 public class ClienteRepository {
 
-    // === LIST : permite duplicatas, mantém ordem ===
-    private List<Cliente> listaClientes = new ArrayList<>();
+    private List<Cliente> listaClientes;
+    private Set<String> cpfs; // garante unicidade
+    private Map<String, Cliente> mapaPorCpf;
 
-    // === SET : não permite duplicatas, ignora clientes com o mesmo ID ===
-    private Set<Cliente> conjuntoClientes = new HashSet<>();
+    public ClienteRepository() {
+        // tenta carregar da persistência; se não existir, cria vazios
+        List<Cliente> carregados = Persistencia.carregarClientes();
+        if (carregados != null) {
+            this.listaClientes = new ArrayList<>(carregados);
+        } else {
+            this.listaClientes = new ArrayList<>();
+        }
 
-    // === MAP : chave = ID do cliente, valor = Cliente ===
-    private Map<String, Cliente> mapaClientes = new HashMap<>();
+        // construir set e map a partir da lista
+        this.cpfs = new HashSet<>();
+        this.mapaPorCpf = new HashMap<>();
+        for (Cliente c : listaClientes) {
+            if (c.getCpf() != null) {
+                cpfs.add(c.getCpf());
+                mapaPorCpf.put(c.getCpf(), c);
+            }
+        }
+    }
 
-    // -----------------------------
-    // MÉTODOS CRUD USANDO LIST
-    // -----------------------------
-    public void adicionarClienteLista(Cliente cliente) {
+    public boolean salvar(Cliente cliente) {
+        if (cliente == null || cliente.getCpf() == null) return false;
+        if (cpfs.contains(cliente.getCpf())) {
+            return false; // já existe
+        }
         listaClientes.add(cliente);
+        cpfs.add(cliente.getCpf());
+        mapaPorCpf.put(cliente.getCpf(), cliente);
+        Persistencia.salvarClientes(listaClientes);
+        return true;
     }
 
-    public List<Cliente> listarClientesLista() {
-        return listaClientes;
+    public Cliente buscarPorCpf(String cpf) {
+        return mapaPorCpf.get(cpf);
     }
 
-    public boolean removerClienteLista(String id) {
-        return listaClientes.removeIf(c -> c.getId().equals(id));
+    public List<Cliente> listarTodos() {
+        return new ArrayList<>(listaClientes);
     }
 
-    // -----------------------------
-    // MÉTODOS CRUD USANDO SET
-    // -----------------------------
-    public void adicionarClienteSet(Cliente cliente) {
-        conjuntoClientes.add(cliente); // duplicates ignorados automaticamente
-    }
-
-    public Set<Cliente> listarClientesSet() {
-        return conjuntoClientes;
-    }
-
-    public boolean removerClienteSet(String id) {
-        return conjuntoClientes.removeIf(c -> c.getId().equals(id));
-    }
-
-    // -----------------------------
-    // MÉTODOS CRUD USANDO MAP
-    // -----------------------------
-    public void adicionarClienteMap(Cliente cliente) {
-        mapaClientes.put(cliente.getId(), cliente);
-    }
-
-    public Cliente buscarClienteMap(String id) {
-        return mapaClientes.get(id);
-    }
-
-    public Map<String, Cliente> listarClientesMap() {
-        return mapaClientes;
-    }
-
-    public Cliente removerClienteMap(String id) {
-        return mapaClientes.remove(id);
+    public boolean removerPorCpf(String cpf) {
+        Cliente c = mapaPorCpf.remove(cpf);
+        if (c == null) return false;
+        cpfs.remove(cpf);
+        listaClientes.removeIf(x -> x.getCpf().equals(cpf));
+        Persistencia.salvarClientes(listaClientes);
+        return true;
     }
 }
+
+
+
+
+
 
