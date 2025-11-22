@@ -10,66 +10,50 @@ import model.Conta;
 import repository.ClienteRepository;
 import repository.ContaRepository;
 
+/**
+ * Banco: camada orquestradora que mantém Map e Set obrigatórios e usa repositórios.
+ */
 public class Banco {
 
     private String nome;
-
-    // Coleções obrigatórias do projeto
-    private Map<String, Conta> contasPorNumero;     // Map: número → conta
-    private Set<Cliente> clientesRegistrados;       // Set: clientes únicos
-
-    // Repositórios
+    private Map<String, Conta> contasPorNumero;
+    private Set<Cliente> clientesRegistrados;
     private ClienteRepository clienteRepository;
     private ContaRepository contaRepository;
 
     public Banco(String nome) {
         this.nome = nome;
-
         this.contasPorNumero = new HashMap<>();
         this.clientesRegistrados = new HashSet<>();
-
         this.clienteRepository = new ClienteRepository();
         this.contaRepository = new ContaRepository();
+
+        // inicializar coleções a partir dos repositórios carregados (opcional)
+        for (var c : contaRepository.listarTodas()) {
+            contasPorNumero.put(c.getNumero(), c);
+        }
+        for (var cl : clienteRepository.listarTodos()) {
+            clientesRegistrados.add(cl);
+        }
     }
 
-    // -------------------------------
-    // MÉTODOS DE CLIENTE
-    // -------------------------------
-
     public boolean registrarCliente(Cliente cliente) {
-        if (cliente == null) return false;
-
+        if (cliente == null || cliente.getCpf() == null) return false;
         boolean novo = clientesRegistrados.add(cliente);
-        if (novo) {
-            clienteRepository.salvar(cliente);
-            return true;
-        }
-        return false;
+        if (novo) clienteRepository.salvar(cliente);
+        return novo;
     }
 
     public Cliente buscarClientePorCpf(String cpf) {
         return clienteRepository.buscarPorCpf(cpf);
     }
 
-    public Set<Cliente> listarClientes() {
-        return new HashSet<>(clientesRegistrados);
-    }
-
-    // -------------------------------
-    // MÉTODOS DE CONTA
-    // -------------------------------
-
     public boolean adicionarConta(Conta conta) {
-        if (conta == null) return false;
-
-        String numero = conta.getNumero();
-
-        if (!contasPorNumero.containsKey(numero)) {
-            contasPorNumero.put(numero, conta);
-            contaRepository.salvar(conta);
-            return true;
-        }
-        return false;
+        if (conta == null || conta.getNumero() == null) return false;
+        if (contasPorNumero.containsKey(conta.getNumero())) return false;
+        contasPorNumero.put(conta.getNumero(), conta);
+        contaRepository.salvar(conta);
+        return true;
     }
 
     public Conta buscarConta(String numero) {
@@ -80,12 +64,15 @@ public class Banco {
         return new HashMap<>(contasPorNumero);
     }
 
-    // -------------------------------
-    // GETTERS
-    // -------------------------------
-
-    public String getNome() {
-        return nome;
+    public Set<Cliente> listarClientes() {
+        return new HashSet<>(clientesRegistrados);
     }
 
+    public String getNome() { return nome; }
 }
+
+
+
+
+
+  
