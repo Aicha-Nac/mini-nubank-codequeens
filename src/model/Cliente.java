@@ -6,6 +6,11 @@ public void adicionarConta(Conta conta) {
 
 public List<Conta> getContas() {
     return contas;
+import java.util.List;
+import java.util.ArrayList;
+
+
+
 }
 
 
